@@ -2,7 +2,7 @@ import pyodbc
 import pandas as pd
 import traceback
  
-class SQL():
+class pysql():
     def __init__(self, args: list) -> None:
         self.driver = args[0]
         self.server = args[1]
