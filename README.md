@@ -17,11 +17,41 @@ conn = pyql.SqlConn("<ODBC DRIVER>",
 pyql.get_drivers()
 ```
 ![alt text](image.png)<br>
-#### A simple select * query
+#### Building a Select query
 ```python
 p = pyql.Select("Users")
 ```
 ```sql
 SELECT * FROM USERS
 ```
-
+#### Adding specific search columns
+```python
+COLUMNS = [
+    'UserID',
+    'UserName',
+    'Password'
+]
+p = pyql.Select("Users", columns=COLUMNS)
+```
+```sql
+SELECT UserID, UserName, Password 
+FROM USERS
+```
+#### Adding a where clause
+```python
+COLUMNS = [
+    'UserID',
+    'UserName',
+    'Password'
+]
+WHERE = {
+    'UserName': 'foo bar',
+    'IsLoggedIn': 1
+}
+p = pyql.Select("Users", columns=COLUMNS, where=WHERE)
+```
+```sql
+SELECT UserID, UserName, Password 
+FROM USERS 
+WHERE UserName = 'foo bar' And IsLoggedIn = 1
+```
