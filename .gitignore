@@ -160,4 +160,4 @@ cython_debug/
 #.idea/
 
 __test.py
-.xlsx
+__test/
