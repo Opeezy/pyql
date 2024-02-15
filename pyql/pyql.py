@@ -2,9 +2,12 @@ import pyodbc
 import pandas as pd
 import traceback
 import logging
+import warnings
+warnings.filterwarnings('ignore')
 
-from typing import Optional, List
+from typing import Optional, List, Dict, Union
 from pandas import DataFrame
+from binascii import hexlify
 
 logging.basicConfig(level=logging.DEBUG)
  
@@ -21,31 +24,65 @@ class SqlConn():
     
     def send_query(self, query) -> DataFrame:
         try:
-            df = DataFrame
             cnxn = pyodbc.connect(f'DRIVER={self.driver};SERVER={self.server};DATABASE={self.db};UID={self.user};PWD={self.pw}')
             cnxn.setencoding(encoding='utf-8')
+            cnxn.add_output_converter(-151, self.__handle_geometry)
             df = pd.read_sql_query(query, cnxn)
             cnxn.close()        
             return df
         except Exception as e:
             print(traceback.format_exc())
+    
+    def get_all_columns(self, table) -> List[str]:
+        columns = []
+        cnxn = pyodbc.connect(f'DRIVER={self.driver};SERVER={self.server};DATABASE={self.db};UID={self.user};PWD={self.pw}')
+        cnxn.setencoding(encoding='utf-8')
+        cnxn.add_output_converter(-151, self.__handle_geometry)
+        cursor = cnxn.cursor()
+        for row in cursor.columns(table=table):
+            columns.append(row.column_name)
+        cnxn.close()     
+        return columns 
+
+    def __handle_geometry(self, geom):
+        return f"0x{hexlify(geom).decode().upper()}"
    
 
 class Select:
-    def __init__(self, conn:SqlConn, table:str, columns:List[str]) -> None:
+    def __init__(self,
+                  conn:SqlConn,
+                    table:str,
+                      columns:Optional[List[str]] = None,
+                        where: Optional[Dict[str, Union[str,int]]] = None) -> None:
         self.conn = conn
-        if columns == []:
-            raise Exception("Empty list provided for columns")
+        self.__table = table
+        self.__column_string = ''
+        self.query = f'Select {self.__column_string} From {self.__table}'
+        if columns is None:
+            col = self.conn.get_all_columns(table)
+            self.__build_column_string(col)
+        else:        
+            self.__build_column_string(columns)
         
-        column_string = ''
-        for c in columns:
-            column_string += f'{c}, '
+        if where is not None:
+            self.query += ' Where '
+            for key, value in where.items():
+                self.query += f'{key} = {value} And '
+            self.query = self.query.rstrip(' And ')
+        logging.debug(self.query)
 
-        column_string = column_string.strip().rstrip(',')
-        self.query:str = f'Select {column_string} From {table}'
+    def __str__(self) -> str:
+        return self.query
 
     def to_frame(self) -> DataFrame:
         return self.conn.send_query(self.query)
+    
+    def __build_column_string(self, columns):
+        for c in columns:
+            self.__column_string += f'{c}, '
+        self.__column_string = self.__column_string.strip().rstrip(',')
+        self.query = f'Select {self.__column_string} From {self.__table}'
+    
  
 
 
