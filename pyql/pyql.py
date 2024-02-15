@@ -35,14 +35,17 @@ class SqlConn():
     
     def get_all_columns(self, table) -> List[str]:
         columns = []
+        types = []
         cnxn = pyodbc.connect(f'DRIVER={self.driver};SERVER={self.server};DATABASE={self.db};UID={self.user};PWD={self.pw}')
         cnxn.setencoding(encoding='utf-8')
         cnxn.add_output_converter(-151, self.__handle_geometry)
         cursor = cnxn.cursor()
         for row in cursor.columns(table=table):
+            types.append(row[5])
             columns.append(row.column_name)
-        cnxn.close()     
-        return columns 
+        cnxn.close()  
+        print(types)   
+        return columns, types
 
     def __handle_geometry(self, geom) -> str:
         return f"0x{hexlify(geom).decode().upper()}"
@@ -60,11 +63,14 @@ class Select:
         self.__column_string = ''
         self.__top = ''
         self.__where = ''
+        self.__types = None
         if top != None:
             self.__top = f' top {top}'
 
         if columns is None:
-            col = self.conn.get_all_columns(table)
+            col, types = self.conn.get_all_columns(table)
+            self.__types = types
+            self.__col_types(col)
             self.__build_column_string(col)
         else:        
             self.__build_column_string(columns)
@@ -77,13 +83,13 @@ class Select:
         return self.query
 
     def to_frame(self) -> DataFrame:
-        return self.conn.send_query(self.query)
+        df = self.conn.send_query(self.query)
+        return df
     
     def to_excel(self, filename:str) -> None:
         df = self.conn.send_query(self.query)
-        writer = pd.ExcelWriter(filename)
-        df.to_excel(writer, sheet_name='Query')
-        writer.save()
+        df = df.fillna(value='NULL')
+        df.to_excel(filename, sheet_name='Query')
     
     def __build_column_string(self, columns):
         for c in columns:
@@ -95,6 +101,11 @@ class Select:
         for key, value in where.items():
             self.__where += f' {key} = {value} And'
         self.__where = self.__where.rstrip(' And ')
+    
+    def __col_types(self, col):
+        d = {'column': col, 'types': self.__types}
+        df = pd.DataFrame(data=d)
+        print(df)
 
 if __name__ == "__main__":
     pass
