@@ -52,18 +52,19 @@ class SqlConn():
 
 class Select:
     def __init__(self,
-                  conn:SqlConn,
-                    table:str,
-                    top: Optional[int] = None,
-                      columns:Optional[List[str]] = None,
-                        where: Optional[Dict[str, List]] = None) -> None:
+                conn:SqlConn,
+                table:str,
+                top: Optional[int] = None,
+                columns:Optional[List[str]] = None,
+                where: Optional[Dict[str, List]] = None,
+                order: Optional[List[str]] = None) -> None:
         self.conn = conn
         self.__table = table
         self.__column_string = ''
         self.__top = ''
         self.__where = ''
-        self.__types = None
-        if top != None:
+        self.__order = ''
+        if top is not None:
             self.__top = f' top {top}'
 
         if columns is None:
@@ -75,7 +76,10 @@ class Select:
             self.__build_column_string(columns)
         if where is not None:
             self.__build_where(where)
-        self.query = f'Select{self.__top}{self.__column_string} From {self.__table}{self.__where}'
+        if order is not None:
+            self.__build_order(order)
+            
+        self.query = f'Select{self.__top}{self.__column_string} From {self.__table}{self.__where}{self.__order}'
 
     def __str__(self) -> str:
         return self.query
@@ -97,8 +101,17 @@ class Select:
     def __build_where(self, where:Dict[str, Union[str,int]]):
         self.__where = ' Where'
         for key, value in where.items():
-            self.__where += f" {key} {value[0]} '{value[1]}' And"
+
+            if type(value[1]) == str:
+                value[1] = f"'{value[1]}'"
+            self.__where += f" {key} {value[0]} {value[1]} And"
         self.__where = self.__where.rstrip(' And ')
+
+    def __build_order(self, order:List[str]):
+        self.__order = ' Order By '
+        for o in order:
+            self.__order += f'{o}, '
+        self.__order = self.__order.rstrip(', ')
     
     def __col_types(self, col):
         d = {'column': col, 'types': self.__types}
