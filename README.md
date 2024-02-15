@@ -63,12 +63,12 @@ COLUMNS = [
 WHERE = {
     'Age': ['>', 24],
     'Siblings': ['<=', 3],
-    'Name': ['Like', 'John']
+    'Name': ['Like', 'John%']
 }
 p = pyql.Select("Users", columns=COLUMNS, where=WHERE)
 ```
 ```sql
 SELECT UserID, UserName, Password 
 FROM USERS 
-WHERE Age > 24 And Siblings <= 3 And Name Like 'John'
+WHERE Age > 24 And Siblings <= 3 And Name Like 'John%'
 ```

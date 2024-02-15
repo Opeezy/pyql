@@ -97,7 +97,7 @@ class Select:
     def __build_where(self, where:Dict[str, Union[str,int]]):
         self.__where = ' Where'
         for key, value in where.items():
-            self.__where += f' {key} {value[0]} {value[1]} And'
+            self.__where += f" {key} {value[0]} '{value[1]}' And"
         self.__where = self.__where.rstrip(' And ')
     
     def __col_types(self, col):
