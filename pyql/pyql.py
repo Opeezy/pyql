@@ -107,5 +107,10 @@ class Select:
         df = pd.DataFrame(data=d)
         print(df)
 
+def get_drivers():
+    d = pyodbc.drivers()
+    df = pd.DataFrame(data=d, columns=['Drivers'])
+    print(df)
+
 if __name__ == "__main__":
     pass
