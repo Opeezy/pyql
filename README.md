@@ -16,7 +16,6 @@ conn = pyql.SqlConn("<ODBC DRIVER>",
 ```python
 pyql.get_drivers()
 ```
-![alt text](image.png)<br>
 #### Building a Select query
 ```python
 p = pyql.Select("Users")
