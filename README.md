@@ -44,13 +44,31 @@ COLUMNS = [
     'Password'
 ]
 WHERE = {
-    'UserName': 'foo bar',
-    'IsLoggedIn': 1
+    'UserName': ['=','foo bar'] 
 }
 p = pyql.Select("Users", columns=COLUMNS, where=WHERE)
 ```
 ```sql
 SELECT UserID, UserName, Password 
 FROM USERS 
-WHERE UserName = 'foo bar' And IsLoggedIn = 1
+WHERE UserName = 'foo bar'
+```
+#### Using different comparison operators
+```python
+COLUMNS = [
+    'UserID',
+    'UserName',
+    'Password'
+]
+WHERE = {
+    'Age': ['>', 24],
+    'Siblings': ['<=', 3],
+    'Name': ['Like', 'John']
+}
+p = pyql.Select("Users", columns=COLUMNS, where=WHERE)
+```
+```sql
+SELECT UserID, UserName, Password 
+FROM USERS 
+WHERE Age > 24 And Siblings <= 3 And Name Like 'John'
 ```

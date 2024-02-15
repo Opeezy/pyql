@@ -44,7 +44,6 @@ class SqlConn():
             types.append(row[5])
             columns.append(row.column_name)
         cnxn.close()  
-        print(types)   
         return columns, types
 
     def __handle_geometry(self, geom) -> str:
@@ -57,7 +56,7 @@ class Select:
                     table:str,
                     top: Optional[int] = None,
                       columns:Optional[List[str]] = None,
-                        where: Optional[Dict[str, Union[str,int]]] = None) -> None:
+                        where: Optional[Dict[str, List]] = None) -> None:
         self.conn = conn
         self.__table = table
         self.__column_string = ''
@@ -70,14 +69,13 @@ class Select:
         if columns is None:
             col, types = self.conn.get_all_columns(table)
             self.__types = types
-            self.__col_types(col)
+            #self.__col_types(col)
             self.__build_column_string(col)
         else:        
             self.__build_column_string(columns)
         if where is not None:
             self.__build_where(where)
         self.query = f'Select{self.__top}{self.__column_string} From {self.__table}{self.__where}'
-        logging.debug(self.query)
 
     def __str__(self) -> str:
         return self.query
@@ -99,7 +97,7 @@ class Select:
     def __build_where(self, where:Dict[str, Union[str,int]]):
         self.__where = ' Where'
         for key, value in where.items():
-            self.__where += f' {key} = {value} And'
+            self.__where += f' {key} {value[0]} {value[1]} And'
         self.__where = self.__where.rstrip(' And ')
     
     def __col_types(self, col):
