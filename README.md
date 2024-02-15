@@ -9,8 +9,8 @@ import pyql
 conn = pyql.SqlConn("<ODBC DRIVER>",
                     "<SERVER>\\<INSTANCE>",
                     "<DATABASE>",
-                    "<USERNAME>>",
-                    "<PASSWORD>)")
+                    "<USERNAME>",
+                    "<PASSWORD>")
 ```
 #### If you need an easy way to find your odbc drivers, use...
 ```python
