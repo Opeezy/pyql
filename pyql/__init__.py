@@ -1,1 +1,1 @@
-from pyql.pyql import *
+from pyql.main import *
