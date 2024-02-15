@@ -44,7 +44,7 @@ class SqlConn():
         cnxn.close()     
         return columns 
 
-    def __handle_geometry(self, geom):
+    def __handle_geometry(self, geom) -> str:
         return f"0x{hexlify(geom).decode().upper()}"
    
 
@@ -52,23 +52,25 @@ class Select:
     def __init__(self,
                   conn:SqlConn,
                     table:str,
+                    top: Optional[int] = None,
                       columns:Optional[List[str]] = None,
                         where: Optional[Dict[str, Union[str,int]]] = None) -> None:
         self.conn = conn
         self.__table = table
         self.__column_string = ''
-        self.query = f'Select {self.__column_string} From {self.__table}'
+        self.__top = ''
+        self.__where = ''
+        if top != None:
+            self.__top = f' top {top}'
+
         if columns is None:
             col = self.conn.get_all_columns(table)
             self.__build_column_string(col)
         else:        
             self.__build_column_string(columns)
-        
         if where is not None:
-            self.query += ' Where '
-            for key, value in where.items():
-                self.query += f'{key} = {value} And '
-            self.query = self.query.rstrip(' And ')
+            self.__build_where(where)
+        self.query = f'Select{self.__top}{self.__column_string} From {self.__table}{self.__where}'
         logging.debug(self.query)
 
     def __str__(self) -> str:
@@ -77,14 +79,22 @@ class Select:
     def to_frame(self) -> DataFrame:
         return self.conn.send_query(self.query)
     
+    def to_excel(self, filename:str) -> None:
+        df = self.conn.send_query(self.query)
+        writer = pd.ExcelWriter(filename)
+        df.to_excel(writer, sheet_name='Query')
+        writer.save()
+    
     def __build_column_string(self, columns):
         for c in columns:
             self.__column_string += f'{c}, '
-        self.__column_string = self.__column_string.strip().rstrip(',')
-        self.query = f'Select {self.__column_string} From {self.__table}'
-    
- 
+        self.__column_string = f' {self.__column_string.strip().rstrip(',')}'
 
+    def __build_where(self, where:Dict[str, Union[str,int]]):
+        self.__where = ' Where'
+        for key, value in where.items():
+            self.__where += f' {key} = {value} And'
+        self.__where = self.__where.rstrip(' And ')
 
 if __name__ == "__main__":
     pass
