@@ -11,6 +11,15 @@ from binascii import hexlify
 from pyql.exceptions import *
 
 warnings.filterwarnings('ignore')
+
+OPERATORS = [
+    '=',
+    '>',
+    '<',
+    '>=',
+    '<=',
+    'like'
+]
  
 class SqlConn():
     def __init__(self, driver:str, server:str, db:str, user:str, pw:str) -> None:
@@ -54,7 +63,6 @@ class Select:
                 table:str,
                 top: Optional[int] = None,
                 columns:Optional[List[str]] = None,
-                where: Optional[Dict[str, List]] = None,
                 order: Optional[List[str]] = None) -> None:
         self.conn = conn
         self.__table = table
@@ -72,8 +80,6 @@ class Select:
             self.__build_column_string(col)
         else:        
             self.__build_column_string(columns)
-        if where is not None:
-            self.__build_where(where)
         if order is not None:
             self.__build_order(order)
             
@@ -82,7 +88,7 @@ class Select:
     def __str__(self) -> str:
         return self.query
 
-    def to_frame(self) -> DataFrame:
+    def frame(self) -> DataFrame:
         df = self.conn.send_query(self.query)
         if df.empty:
             raise EmptyDataError("Query returned nothing")
@@ -129,10 +135,19 @@ class Select:
             self.__order += f'{o}, '
         self.__order = self.__order.rstrip(', ')
     
-    def __col_types(self, col):
-        d = {'column': col, 'types': self.__types}
-        df = pd.DataFrame(data=d)
-        print(df)
+    def where(self, operator:str ,values:Dict[str,Union[str,int]]) -> None:
+        operator = operator.strip().lower()
+        if operator in OPERATORS:            
+            if len(values) > 0:
+                self.__where = ' Where '
+                for key, value in values.items():
+                    self.__where += f'{key} {operator} {value} And'
+                self.__where = self.__where.rstrip(' And')
+                self.query = f'Select{self.__top}{self.__column_string} From {self.__table}{self.__where}{self.__order}'
+            return self
+    
+
+    
 
 def get_drivers():
     d = pyodbc.drivers()
