@@ -62,14 +62,14 @@ class Select:
                 conn:SqlConn,
                 table:str,
                 top: Optional[int] = None,
-                columns:Optional[List[str]] = None,
-                order: Optional[List[str]] = None) -> None:
+                columns:Optional[List[str]] = None) -> None:
         self.conn = conn
         self.__table = table
         self.__column_string = ''
         self.__top = ''
         self.__where = ''
         self.__order = ''
+
         if top is not None:
             self.__top = f' top {top}'
 
@@ -80,9 +80,7 @@ class Select:
             self.__build_column_string(col)
         else:        
             self.__build_column_string(columns)
-        if order is not None:
-            self.__build_order(order)
-            
+
         self.query = f'Select{self.__top}{self.__column_string} From {self.__table}{self.__where}{self.__order}'
 
     def __str__(self) -> str:
@@ -119,21 +117,6 @@ class Select:
         for c in columns:
             self.__column_string += f'{c}, '
         self.__column_string = f' {self.__column_string.strip().rstrip(',')}'
-
-    def __build_where(self, where:Dict[str, Union[str,int]]):
-        self.__where = ' Where'
-        for key, value in where.items():
-
-            if type(value[1]) == str:
-                value[1] = f"'{value[1]}'"
-            self.__where += f" {key} {value[0]} {value[1]} And"
-        self.__where = self.__where.rstrip(' And ')
-
-    def __build_order(self, order:List[str]):
-        self.__order = ' Order By '
-        for o in order:
-            self.__order += f'{o}, '
-        self.__order = self.__order.rstrip(', ')
     
     def where(self, operator:str ,values:Dict[str,Union[str,int]]) -> None:
         operator = operator.strip().lower()
@@ -145,7 +128,21 @@ class Select:
                 self.__where = self.__where.rstrip(' And')
                 self.query = f'Select{self.__top}{self.__column_string} From {self.__table}{self.__where}{self.__order}'
             return self
-    
+        
+    def order(self, order: Union[List[str],str]):
+        self.__order = ' Order By '
+        print(type(order))
+        if type(order) is list:
+            for o in order:
+                self.__order += f'{o}, '
+            self.__order = self.__order.rstrip(', ')
+            self.query = f'Select{self.__top}{self.__column_string} From {self.__table}{self.__where}{self.__order}'
+            return self
+        else:
+            print("test")
+            self.__order += order
+            self.query = f'Select{self.__top}{self.__column_string} From {self.__table}{self.__where}{self.__order}'
+        return self
 
     
 
