@@ -9,17 +9,9 @@ from typing import Optional, List, Dict, Union
 from pandas import DataFrame
 from binascii import hexlify
 from pyql.exceptions import *
+from pyql.const import *
 
 warnings.filterwarnings('ignore')
-
-OPERATORS = [
-    '=',
-    '>',
-    '<',
-    '>=',
-    '<=',
-    'like'
-]
  
 class SqlConn():
     def __init__(self, driver:str, server:str, db:str, user:str, pw:str) -> None:
@@ -143,6 +135,9 @@ class Select:
             self.__order += order
             self.query = f'Select{self.__top}{self.__column_string} From {self.__table}{self.__where}{self.__order}'
         return self
+    
+    def join(self):
+        '''TODO'''
 
     
 
